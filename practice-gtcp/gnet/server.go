@@ -13,14 +13,15 @@ type Server struct {
 	IPVersion string
 	IP        string
 	Port      int
+	Router    giface.IRouter
 }
 
-func CallBackToClient(conn *net.TCPConn, data []byte, cnt int) error {
+/*func CallBackToClient(conn *net.TCPConn, data []byte, cnt int) error {
 	if _, err := conn.Write(data[:cnt]); err != nil {
 		return err
 	}
 	return nil
-}
+}*/
 
 func (s *Server) Start() {
 	go func() {
@@ -38,7 +39,8 @@ func (s *Server) Start() {
 			if err != nil {
 				continue
 			}
-			newConn := NewConnection(conn, cid, CallBackToClient)
+			//newConn := NewConnection(conn, cid, CallBackToClient)
+			newConn := NewConnection(conn, cid, s.Router)
 			cid++
 			go newConn.Start()
 		}
@@ -55,12 +57,17 @@ func (s *Server) Serve() {
 	select {}
 }
 
+func (s *Server) AddRouter(router giface.IRouter) {
+	s.Router = router
+}
+
 func NewServer(name string) giface.IServer {
 	s := &Server{
 		Name:      name,
 		IPVersion: "tcp4",
 		IP:        "127.0.0.1",
 		Port:      8888,
+		Router:    nil,
 	}
 	return s
 }

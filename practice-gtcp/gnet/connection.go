@@ -8,22 +8,24 @@ import (
 var _ giface.IConnection = (*Connection)(nil)
 
 type Connection struct {
-	Conn      *net.TCPConn
-	ConnID    uint32
-	isClosed  bool
-	handleAPI giface.HandleFunc
-	ExitChan  chan bool
+	Conn     *net.TCPConn
+	ConnID   uint32
+	isClosed bool
+	//handleAPI giface.HandleFunc
+	ExitChan chan bool
+	Router   giface.IRouter
 }
 
-func NewConnection(conn *net.TCPConn, connID uint32, callback giface.HandleFunc) *Connection {
+func NewConnection(conn *net.TCPConn, connID uint32, router giface.IRouter) *Connection {
 	return &Connection{
-		Conn:      conn,
-		ConnID:    connID,
-		isClosed:  false,
-		handleAPI: callback,
-		ExitChan:  make(chan bool, 1),
+		Conn:     conn,
+		ConnID:   connID,
+		isClosed: false,
+		Router:   router,
+		ExitChan: make(chan bool, 1),
 	}
 }
+
 func (c *Connection) Start() {
 	go c.StartReader()
 }
@@ -50,19 +52,29 @@ func (c *Connection) RemoteAddr() net.Addr {
 }
 
 func (c *Connection) Send(data []byte) error {
-	panic("implement me")
+	_, err := c.Conn.Write(data)
+	return err
 }
 
 func (c *Connection) StartReader() {
 	defer c.Stop()
 	for {
 		buf := make([]byte, 512)
-		cnt, err := c.Conn.Read(buf)
+		_, err := c.Conn.Read(buf)
 		if err != nil {
 			continue
 		}
-		if err := c.handleAPI(c.Conn, buf, cnt); err != nil {
+		/*if err := c.handleAPI(c.Conn, buf, cnt); err != nil {
 			break
+		}*/
+		req := Request{
+			conn: c,
+			data: buf,
 		}
+		go func(request giface.IRequest) {
+			c.Router.PreHandle(request)
+			c.Router.Handle(request)
+			c.Router.PostHandle(request)
+		}(&req)
 	}
 }
