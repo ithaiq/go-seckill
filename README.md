@@ -1,3 +1,3 @@
 # Golang高质量练手项目
 
-[![ReadMe Card](https://github-readme-stats.vercel.app/api/pin/?username=ithaiq&repo=practice-gtcp)](https://github.com/ithaiq/practice-go/tree/master/practice-gtcp/)
+* [练手项目1. Golang轻量级tcp框架](https://github.com/ithaiq/practice-go/tree/master/practice-gtcp)
