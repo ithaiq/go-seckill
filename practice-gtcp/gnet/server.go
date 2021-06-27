@@ -3,6 +3,7 @@ package gnet
 import (
 	"fmt"
 	"ithaiq/gtcp/giface"
+	"ithaiq/gtcp/utils"
 	"net"
 )
 
@@ -63,10 +64,10 @@ func (s *Server) AddRouter(router giface.IRouter) {
 
 func NewServer(name string) giface.IServer {
 	s := &Server{
-		Name:      name,
+		Name:      utils.GlobalObject.Name,
 		IPVersion: "tcp4",
-		IP:        "127.0.0.1",
-		Port:      8888,
+		IP:        utils.GlobalObject.Host,
+		Port:      utils.GlobalObject.TcpPort,
 		Router:    nil,
 	}
 	return s

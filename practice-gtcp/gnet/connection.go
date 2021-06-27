@@ -2,6 +2,7 @@ package gnet
 
 import (
 	"ithaiq/gtcp/giface"
+	"ithaiq/gtcp/utils"
 	"net"
 )
 
@@ -59,7 +60,7 @@ func (c *Connection) Send(data []byte) error {
 func (c *Connection) StartReader() {
 	defer c.Stop()
 	for {
-		buf := make([]byte, 512)
+		buf := make([]byte, utils.GlobalObject.MaxPackageSize)
 		_, err := c.Conn.Read(buf)
 		if err != nil {
 			continue
