@@ -1,12 +1,12 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
-	"ithaiq/grpc/codec"
+	"ithaiq/grpc/client"
 	"ithaiq/grpc/server"
 	"log"
 	"net"
+	"sync"
 	"time"
 )
 
@@ -20,7 +20,7 @@ func startServer(addr chan string) {
 	server.Accept(l)
 }
 
-func main() {
+/*func main() {
 	log.SetFlags(0)
 	addr := make(chan string)
 	go startServer(addr)
@@ -42,4 +42,29 @@ func main() {
 		_ = cc.ReadBody(&reply)
 		log.Println("reply:", reply)
 	}
+}*/
+
+func main() {
+	log.SetFlags(0)
+	addr := make(chan string)
+	go startServer(addr)
+
+	conn, _ := client.Dial("tcp", <-addr)
+	defer func() { _ = conn.Close() }()
+
+	time.Sleep(time.Second)
+	var wg sync.WaitGroup
+	for i := 0; i < 5; i++ {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			args := fmt.Sprintf("grpc req %d", i)
+			var reply string
+			if err := conn.Call("Grpc.Test", args, &reply); err != nil {
+				log.Fatal("call Grpc.Test error:", err)
+			}
+			log.Println("reply:", reply)
+		}(i)
+	}
+	wg.Wait()
 }
