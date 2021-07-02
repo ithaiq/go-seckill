@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"context"
 	"ithaiq/grpc/client"
 	"ithaiq/grpc/server"
 	"log"
@@ -10,7 +10,23 @@ import (
 	"time"
 )
 
+type Grpc int
+
+type GrpcReq struct {
+	Num1, Num2 int
+}
+
+func (f Grpc) Test(args GrpcReq, reply *int) error {
+	*reply = args.Num1 + args.Num2
+	return nil
+}
+
 func startServer(addr chan string) {
+	var foo Grpc
+	if err := server.Register(&foo); err != nil {
+		log.Fatal("register error:", err)
+	}
+
 	l, err := net.Listen("tcp", ":0")
 	if err != nil {
 		log.Fatal("network error:", err)
@@ -19,30 +35,6 @@ func startServer(addr chan string) {
 	addr <- l.Addr().String()
 	server.Accept(l)
 }
-
-/*func main() {
-	log.SetFlags(0)
-	addr := make(chan string)
-	go startServer(addr)
-
-	conn, _ := net.Dial("tcp", <-addr)
-	defer func() { _ = conn.Close() }()
-
-	time.Sleep(time.Second)
-	_ = json.NewEncoder(conn).Encode(server.DefaultOption) //首先发送 Option 进行协议交换
-	cc := codec.NewGobCodec(conn)
-	for i := 0; i < 5; i++ {
-		h := &codec.Header{
-			ServiceMethod: "Grpc.Test",
-			Seq:           uint64(i),
-		}
-		_ = cc.Write(h, fmt.Sprintf("grpc req %d", h.Seq))
-		_ = cc.ReadHeader(h)
-		var reply string
-		_ = cc.ReadBody(&reply)
-		log.Println("reply:", reply)
-	}
-}*/
 
 func main() {
 	log.SetFlags(0)
@@ -58,12 +50,13 @@ func main() {
 		wg.Add(1)
 		go func(i int) {
 			defer wg.Done()
-			args := fmt.Sprintf("grpc req %d", i)
-			var reply string
-			if err := conn.Call("Grpc.Test", args, &reply); err != nil {
+			args := &GrpcReq{Num1: i, Num2: i * i}
+			ctx, _ := context.WithTimeout(context.Background(), time.Second)
+			var reply int
+			if err := conn.Call(ctx, "Grpc.Test", args, &reply); err != nil {
 				log.Fatal("call Grpc.Test error:", err)
 			}
-			log.Println("reply:", reply)
+			log.Printf("%d + %d = %d", args.Num1, args.Num2, reply)
 		}(i)
 	}
 	wg.Wait()
