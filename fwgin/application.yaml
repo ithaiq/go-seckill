@@ -1,0 +1,5 @@
+server:
+  port: 8088
+config:
+  user:
+    age: 100

@@ -8,6 +8,7 @@ import (
 
 func main() {
 	core.NewEngine().
+		Beans(core.NewGormAdapter()).
 		Attach(middlewares.NewUserMid()).
 		Mount("v1", classes.NewIndexClass()).
 		Mount("v2", classes.NewUserClass()).

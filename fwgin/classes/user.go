@@ -7,6 +7,8 @@ import (
 )
 
 type UserClass struct {
+	*core.GormAdapter
+	Age *core.Value `prefix:"user.age"`
 }
 
 func NewUserClass() *UserClass {
@@ -14,7 +16,7 @@ func NewUserClass() *UserClass {
 }
 
 func (this *UserClass) GetUser(ctx *gin.Context) string {
-	return "ok"
+	return "用户测试" + this.Age.String()
 }
 
 func (this *UserClass) GetDetail(ctx *gin.Context) core.IModel {
@@ -22,7 +24,7 @@ func (this *UserClass) GetDetail(ctx *gin.Context) core.IModel {
 }
 
 func (this *UserClass) GetList(ctx *gin.Context) core.SliceModel {
-	list:=[]*models.UserModel{
+	list := []*models.UserModel{
 		{Id: 1, Name: "test1"},
 		{Id: 2, Name: "test2"},
 	}
